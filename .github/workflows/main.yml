@@ -1,0 +1,42 @@
+name: Build Android C++ from ZIP
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Unzip project
+      run: |
+        # Распаковываем твой архив
+        unzip Wolsaw.zip -d project_files
+        cd project_files
+        # Показываем, что внутри (чтобы ты мог посмотреть логи)
+        ls -la
+
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r25c
+
+    - name: Build with ndk-build
+      run: |
+        cd project_files
+        # Если файлы лежат в корне архива
+        ndk-build NDK_PROJECT_PATH=. APP_ABI=arm64-v8a
+        
+        # Если файлы внутри архива лежат в подпапке (например Wolsaw/), 
+        # то команда будет: cd Wolsaw && ndk-build NDK_PROJECT_PATH=. APP_ABI=arm64-v8a
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Compiled-Libraries
+        path: project_files/libs/ # Путь, где появятся готовые .so файлы
