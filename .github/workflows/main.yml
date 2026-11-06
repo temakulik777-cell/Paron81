@@ -1,0 +1,35 @@
+name: Build Android C++ from ZIP
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Unzip project
+      run: |
+        unzip Wolsaw.zip -d project_files
+
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r25c
+
+    - name: Build with ndk-build
+      run: |
+        cd project_files/Wolsaw
+        # Указываем только 64-битную архитектуру, чтобы обойти ошибку в 32-битном коде
+        ndk-build APP_ABI="arm64-v8a"
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Compiled-Libraries
+        path: project_files/Wolsaw/libs/
